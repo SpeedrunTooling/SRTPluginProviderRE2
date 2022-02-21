@@ -22,5 +22,7 @@ namespace SRTPluginProviderRE2
         public int VersionRevision => assemblyVersion.Revision;
 
         private Version assemblyVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+
+        public bool Equals(IPluginInfo? other) => (this as IPluginInfo).Equals(other);
     }
 }

@@ -6,14 +6,13 @@ using System.Linq;
 
 namespace SRTPluginProviderRE2
 {
-    public class SRTPluginProviderRE2 : IPluginProvider
+    public class SRTPluginProviderRE2 : IPluginProducer
     {
         private Process process;
         private GameMemoryRE2Scanner gameMemoryScanner;
         private Stopwatch stopwatch;
-        private IPluginHostDelegates hostDelegates;
         public IPluginInfo Info => new PluginInfo();
-        public bool GameRunning
+        public bool Available
         {
             get
             {
@@ -28,9 +27,8 @@ namespace SRTPluginProviderRE2
             }
         }
 
-        public int Startup(IPluginHostDelegates hostDelegates)
+        public int Startup()
         {
-            this.hostDelegates = hostDelegates;
             process = GetProcess();
             gameMemoryScanner = new GameMemoryRE2Scanner(process);
             stopwatch = new Stopwatch();
@@ -51,7 +49,7 @@ namespace SRTPluginProviderRE2
         {
             try
             {
-                if (!GameRunning) // Not running? Bail out!
+                if (!Available) // Not running? Bail out!
                     return null;
 
                 if (stopwatch.ElapsedMilliseconds >= 2000L)
@@ -63,18 +61,22 @@ namespace SRTPluginProviderRE2
             }
             catch (Win32Exception ex)
             {
-                if ((ProcessMemory.Win32Error)ex.NativeErrorCode != ProcessMemory.Win32Error.ERROR_PARTIAL_COPY)
-                    hostDelegates.ExceptionMessage(ex);// Only show the error if its not ERROR_PARTIAL_COPY. ERROR_PARTIAL_COPY is typically an issue with reading as the program exits or reading right as the pointers are changing (i.e. switching back to main menu).
+                //if ((ProcessMemory.Win32Error)ex.NativeErrorCode != ProcessMemory.Win32Error.ERROR_PARTIAL_COPY)
+                    //hostDelegates.ExceptionMessage(ex);// Only show the error if its not ERROR_PARTIAL_COPY. ERROR_PARTIAL_COPY is typically an issue with reading as the program exits or reading right as the pointers are changing (i.e. switching back to main menu).
 
                 return null;
             }
-            catch (Exception ex)
+            catch// (Exception ex)
             {
-                hostDelegates.ExceptionMessage(ex);
+                //hostDelegates.ExceptionMessage(ex);
                 return null;
             }
         }
 
         private Process GetProcess() => Process.GetProcessesByName("re2")?.FirstOrDefault();
+
+        public bool Equals(IPlugin? other) => (this as IPlugin).Equals(other);
+
+        public bool Equals(IPluginProducer? other) => (this as IPluginProducer).Equals(other);
     }
 }
